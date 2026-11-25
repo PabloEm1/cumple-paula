@@ -470,22 +470,73 @@ async function nivelKetchup(ctl, cont) {
 //  4) CINE ENCANTADO (emojis)
 // ---------------------------------------------------------------------
 async function nivelCine(ctl, cont) {
-  const qs = cont.preguntas;
+  const lista = cont.pelis || [];
+  const n = Math.min(cont.cuantas || 5, lista.length);
+  const elegidas = mezclar(lista).slice(0, n);
   const s = pantallaNivel('cine', cont, `
-    <div class="pantalla-cine"><div class="lienzo-cine"><span id="emojis">🎬</span></div></div>
-    <p class="info">PELI <b id="num">1</b>/${qs.length}</p>
+    <div class="pantalla-cine"><div class="lienzo-cine"><p class="resumen-cine"></p></div></div>
+    <p class="info">PELI <b id="num">1</b>/${n}</p>
     <div class="opciones"></div>`);
+  const resumen = $('.resumen-cine', s);
   await dialogo(cont.intro);
-  for (let i = 0; i < qs.length; i++) {
+
+  // Blu "proyecta" el resumen letra a letra
+  let maquina = null;
+  function proyectar(texto) {
+    clearInterval(maquina);
+    const letras = Array.from(texto);
+    let k = 0;
+    resumen.textContent = '';
+    resumen.classList.remove('entra'); void resumen.offsetWidth; resumen.classList.add('entra');
+    maquina = setInterval(() => {
+      k += 2; resumen.textContent = letras.slice(0, k).join('');
+      if (k % 6 === 0) Sonido.sfx('texto');
+      if (k >= letras.length || !ctl.vivo()) clearInterval(maquina);
+    }, 28);
+  }
+
+  for (let i = 0; i < n; i++) {
     if (!ctl.vivo()) return esperarSiempre();
     $('#num', s).textContent = i + 1;
-    const em = $('#emojis', s);
-    em.textContent = qs[i].emojis;
-    em.classList.remove('entra'); void em.offsetWidth; em.classList.add('entra');
-    await jugarOpciones(s, ctl, qs[i].opciones, qs[i].pista);
-    ctl.progreso((i + 1) / qs.length);
+    const p = elegidas[i];
+    const otras = mezclar(lista.filter(x => x !== p).map(x => x.titulo)).slice(0, 3);
+    proyectar(txt(p.resumen));
+    await jugarOpciones(s, ctl, [p.titulo, ...otras], p.pista);
+    clearInterval(maquina); resumen.textContent = txt(p.resumen);
+    ctl.progreso((i + 1) / (n + 1));
     await esperar(1300);
   }
+  if (!ctl.vivo()) return esperarSiempre();
+  if (cont.top10 && lista.length) await marquesinaTop(s, ctl, cont.top10, lista);
+}
+
+// El remate del cine: la marquesina enseña su top 10, uno a uno
+async function marquesinaTop(s, ctl, t, lista) {
+  $('.opciones', s).innerHTML = '';
+  $('.info', s).textContent = '★ ★ ★';
+  const barra = $('.barra-abajo', s); if (barra) barra.classList.add('oculto');
+  await dialogo(t.antes);
+  if (!ctl.vivo()) return;
+  const lienzo = $('.lienzo-cine', s);
+  lienzo.classList.add('top');
+  lienzo.innerHTML = `<div class="top-titulo">${esc(txt(t.titulo || 'TOP 10').toUpperCase())}</div>
+    <ol class="top-lista">${lista.map((_, i) => `<li><b>${i + 1}</b><span>· · ·</span></li>`).join('')}</ol>`;
+  Efectos.en($('.top-titulo', lienzo), 20, Efectos.DORADO, 0.9);
+  const filas = $$('.top-lista li', lienzo);
+  const notas = [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79];
+  await esperar(700);
+  for (let i = 0; i < filas.length; i++) {
+    if (!ctl.vivo()) return;
+    $('span', filas[i]).textContent = txt(lista[i].titulo);
+    filas[i].classList.add('sale');
+    Sonido.nota(notas[i % notas.length], 0.3);
+    await esperar(480);
+  }
+  Sonido.sfx('victoria');
+  Efectos.en(lienzo, 45, Efectos.FIESTA, 1.5);
+  ctl.progreso(1);
+  await esperar(1400);
+  await dialogo(t.despues);
 }
 
 // ---------------------------------------------------------------------

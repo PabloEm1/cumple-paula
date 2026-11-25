@@ -162,38 +162,83 @@ window.CONTENIDO = {
       ],
     },
 
-    // 4) CINE: adivinar la peli o serie por los emojis --------------
+    // 4) CINE: Blu cuenta la peli (a su manera) y ella adivina -------
     cine: {
       lugar: "Cine Encantado",
       icono: "🎬",
       intro: [
         "Llegamos al Cine Encantado 🍿",
-        "Aquí solo ponen pelis románticas y series... justo lo tuyo.",
-        "Pero el proyector se volvió loco y solo muestra emojis. ¿Adivinas qué peli o serie es?",
+        "Aquí solo ponen tus pelis y series favoritas... justo lo tuyo.",
+        "Pero el proyector se rompió, así que te las voy a contar yo. A mi manera 👽",
+        "Tú adivina cuál es. ¡Y no se vale reírse de mis resúmenes!",
       ],
-      // La primera opción es la correcta
-      preguntas: [
+      cuantas: 5,   // cuántas pregunta (elige al azar de la lista de abajo)
+      // Su top 10, en el orden en que sale al final en la marquesina.
+      // "resumen" es lo que cuenta Blu; las otras opciones salen solas de la misma lista.
+      pelis: [
         {
-          emojis: "🚢🧊💑💔",
-          opciones: ["Titanic", "Pearl Harbor", "Moana", "La Sirenita"],
-          pista: "Un barco que no debió chocar con un hielo... 🧊",
+          titulo: "Amor a medianoche",
+          resumen: "Una chica que no puede tomar el sol ni un poquito, así que sale de noche a cantar con su guitarra en una estación de tren. Un chico la escucha y... Yo al principio pensé que era una vampira 🧛‍♀️",
+          pista: "La protagonista no puede ver el amanecer ☀️🚫",
         },
         {
-          emojis: "📓👵👴🌧️💋",
-          opciones: ["Diario de una pasión", "Bajo la misma estrella", "Querido John", "Yo antes de ti"],
-          pista: "Él le lee su historia de amor en un cuaderno... 📓",
+          titulo: "Antes de ti",
+          resumen: "Una chica con la ropa más colorida del planeta empieza a trabajar cuidando a un chico muy gruñón que vive al lado de un castillo. Al principio no se soportan. Prepara los pañuelos 😭",
+          pista: "Ella tiene unas medias de abejita muy famosas 🐝",
         },
         {
-          emojis: "🌺👧👽🐶🌊",
-          opciones: ["Lilo & Stitch", "E.T.", "Moana", "Lluvia de hamburguesas"],
-          pista: "Ohana significa familia 💙",
+          titulo: "Lilo y Stitch",
+          resumen: "Una niña de Hawái adopta un \"perrito\" en un refugio. Spoiler: no es un perrito. Es un primo lejano mío que lo rompe todo 👽",
+          pista: "Pasa en Hawái y suena mucho Elvis 🌺",
         },
         {
-          emojis: "☕🛋️👫👫👫🦞",
-          opciones: ["Friends", "How I Met Your Mother", "The Big Bang Theory", "Modern Family"],
-          pista: "Seis amigos, un sofá y una cafetería ☕",
+          titulo: "Cómo perder a un chico en 10 días",
+          resumen: "Una periodista tiene que conseguir que un chico la deje en 10 días para escribir un artículo. Él apostó que la enamoraría en 10 días. Los dos hacen trampa. Los humanos son rarísimos 🤔",
+          pista: "Hay un helecho del amor 🌿",
+        },
+        {
+          titulo: "Corazones malheridos",
+          resumen: "Una cantante y un soldado que no se soportan se casan... de mentira, para tener un seguro médico. Lo de \"de mentira\" no les dura mucho 💍",
+          pista: "Ella canta y él es marine 🎤🪖",
+        },
+        {
+          titulo: "El verano en que me enamoré",
+          resumen: "Una chica pasa todos los veranos en una casa en la playa con dos hermanos. El problema: ¿cuál de los dos? En mi planeta no hay veranos, así que yo no entiendo nada 🏖️",
+          pista: "La playa se llama Cousins 🏖️",
+        },
+        {
+          titulo: "Love is in the Air",
+          resumen: "Un arquitecto muy serio le quita la beca a una chica que trabaja en una floristería. Después le propone fingir que son novios durante dos meses. Así se enamora la gente en Turquía, por lo visto 🇹🇷",
+          pista: "Él es arquitecto y ella vende flores 💐",
+        },
+        {
+          titulo: "The Good Doctor",
+          resumen: "Un cirujano joven y brillantísimo que ve el cuerpo humano por dentro como si fuera un mapa. Con las personas le cuesta un poquito más. Igual que a mí 🩺",
+          pista: "Es una serie de médicos en un hospital de San José 🏥",
+        },
+        {
+          titulo: "El diario de Noa",
+          resumen: "Un señor mayor le lee cada día a una señora una historia de amor escrita en un cuaderno. Hay lluvia, una barca, un beso... y yo llorando en la butaca 😭",
+          pista: "Un cuaderno, una casa blanca y una barca bajo la lluvia 🚣",
+        },
+        {
+          titulo: "Orgullo y prejuicio",
+          resumen: "Una chica muy lista y un señor muy estirado se conocen en un baile y se caen fatal. Él es un engreído, ella no lo soporta... Siglo XIX, vestidos largos y muchas cartas 💌",
+          pista: "Cinco hermanas y una madre desesperada por casarlas 👗",
         },
       ],
+      // El remate: la marquesina enseña su top 10
+      top10: {
+        titulo: "TOP 10 DE {nombre}",
+        antes: [
+          "Espera, espera... ¡el proyector se arregló solo! ✨",
+          "Mira lo que sale en la pantalla 👀",
+        ],
+        despues: [
+          "Sí, sí... ya sé que {deParte} te lo tuvo que preguntar a ti 😂",
+          "Ahora ya sabes para qué era 😏",
+        ],
+      },
       final: [
         "¡Eres una experta en pelis y series! 🍿",
         "¡Cuarto fragmento! 📜 Solo queda uno...",
