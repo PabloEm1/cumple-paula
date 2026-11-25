@@ -179,19 +179,115 @@ async function nivelBorrosa(ctl, cont) {
 async function nivelKetchup(ctl, cont) {
   const meta = cont.meta || 20;
   const s = pantallaNivel('ketchup', cont, `
-    <div class="marcador"><span>🍅 <b id="pts">0</b>/${meta}</span><span id="modoLento"></span></div>
+    <div class="marcador">
+      <span class="medidor-ketchup"><i id="barra"></i></span>
+      <span>🍅 <b id="pts">0</b>/${meta}</span>
+      <span id="modoLento"></span>
+    </div>
     <div class="zona-juego"><canvas></canvas><div class="cuenta"></div></div>`, '🐢 Más lento');
   const zona = $('.zona-juego', s), cv = $('canvas', zona), ctx = cv.getContext('2d');
   const pistaBtn = $('.btn-pista', s), cuenta = $('.cuenta', s);
-  let W = 0, H = 0;
+  const frasesMalas = cont.frasesEnsalada || cont.frasesMostaza || ['¡Puaj!'];
+
+  // ---------- Fondo: atardecer pixelado del Valle del Ketchup ----------
+  let W = 0, H = 0, u = 3, P = 3, fondo = null, sueloY = 0;
+  function azarFijo(semilla) { let x = semilla; return () => (x = (x * 16807) % 2147483647) / 2147483647; }
+
+  function pintarFondo() {
+    const w = Math.ceil(W / P), h = Math.ceil(H / P);
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const g = c.getContext('2d');
+    const rnd = azarFijo(1712);
+    const horizonte = Math.round(h * 0.7);
+
+    // cielo en franjas, con un poco de tramado entre ellas
+    const cielo = ['#1a1c2c', '#33224d', '#5d275d', '#86305a', '#b13e53', '#d65a4f', '#ef7d57', '#f7a35c', '#ffcd75'];
+    const alto = horizonte / cielo.length;
+    cielo.forEach((col, i) => {
+      g.fillStyle = col; g.fillRect(0, Math.floor(i * alto), w, Math.ceil(alto) + 1);
+      if (i > 0) { g.fillStyle = cielo[i - 1]; for (let x = i % 2; x < w; x += 2) g.fillRect(x, Math.floor(i * alto), 1, 1); }
+    });
+    // estrellitas arriba
+    for (let i = 0; i < w * 0.25; i++) {
+      g.fillStyle = rnd() < 0.3 ? '#ffcd75' : '#f4f4f4';
+      g.globalAlpha = 0.4 + rnd() * 0.6;
+      g.fillRect(Math.floor(rnd() * w), Math.floor(rnd() * horizonte * 0.3), 1, 1);
+    }
+    g.globalAlpha = 1;
+    // sol retro con rayas
+    const sx = Math.round(w * 0.7), sy = Math.round(horizonte - h * 0.02), sr = Math.round(w * 0.17);
+    for (let y = -sr; y <= sr; y++) for (let x = -sr; x <= sr; x++) {
+      const d = x * x + y * y;
+      if (d > sr * sr) continue;
+      if (y > 0 && ((y + 1) % 4 < Math.min(3, 1 + Math.floor(y / 5)))) continue; // rayas en la mitad de abajo
+      g.fillStyle = d > (sr - 1.5) ** 2 ? '#ffcd75' : (y < -sr * 0.4 ? '#fff3b0' : '#ffe9a8');
+      g.fillRect(sx + x, sy + y, 1, 1);
+    }
+    // colinas: lejanas, medias y cercanas
+    function colina(base, amp, frec, fase, col, borde) {
+      for (let x = 0; x < w; x++) {
+        const y = Math.round(base - amp * (Math.sin(x * frec + fase) * 0.6 + Math.sin(x * frec * 2.3 + fase * 2) * 0.4));
+        g.fillStyle = col; g.fillRect(x, y, 1, h - y);
+        if (borde) { g.fillStyle = borde; g.fillRect(x, y, 1, 1); }
+      }
+    }
+    colina(horizonte - 4, 5, 0.06, 1, '#5d275d', '#86305a');
+    colina(horizonte + 3, 4, 0.09, 4, '#257179', '#38b764');
+    const cerca = horizonte + 9;
+    colina(cerca, 3, 0.05, 2, '#38b764', '#a7f070');
+    // matas de tomates en la colina cercana
+    for (let i = 0; i < Math.max(4, w / 18); i++) {
+      const x = Math.floor(4 + rnd() * (w - 8)), y = cerca + 4 + Math.floor(rnd() * 5);
+      g.fillStyle = '#1e7a3c'; g.fillRect(x - 2, y - 1, 5, 3); g.fillRect(x - 1, y - 2, 3, 1);
+      g.fillStyle = '#e43b44'; g.fillRect(x - 1, y - 1, 1, 1); g.fillRect(x + 1, y, 1, 1);
+      if (rnd() < 0.5) g.fillRect(x + 2, y - 1, 1, 1);
+    }
+    // suelo
+    const suelo = h - Math.max(4, Math.round(h * 0.07));
+    g.fillStyle = '#5c3a1e'; g.fillRect(0, suelo, w, h - suelo);
+    g.fillStyle = '#7a4419'; for (let x = 0; x < w; x += 3) g.fillRect(x + (x % 2), suelo + 2 + (x % 3), 1, 1);
+    g.fillStyle = '#38b764'; g.fillRect(0, suelo, w, 1);
+    g.fillStyle = '#a7f070'; for (let x = 0; x < w; x += 4) g.fillRect(x + Math.floor(rnd() * 3), suelo - 1, 1, 1);
+
+    // escalar a tamaño real sin suavizar
+    const f = document.createElement('canvas');
+    const dpr = window.devicePixelRatio || 1;
+    f.width = Math.round(W * dpr); f.height = Math.round(H * dpr);
+    const fg = f.getContext('2d');
+    fg.imageSmoothingEnabled = false;
+    fg.drawImage(c, 0, 0, w * P * dpr, h * P * dpr);
+    // cartel de madera: "SOLO HEINZ"
+    fg.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const cx = Math.round(W * 0.2), base = Math.round((cerca - 1) * P);
+    const tam = Math.max(7, Math.round(P * 2.6));
+    fg.font = `${tam}px "Press Start 2P", monospace`;
+    const bw = Math.round(fg.measureText('HEINZ').width + P * 4), bh = Math.round(tam * 2 + P * 5);
+    fg.fillStyle = '#1a1c2c'; fg.fillRect(cx - P * 1.5, base - bh * 0.2, P * 3, bh * 0.9);
+    fg.fillStyle = '#5c3a1e'; fg.fillRect(cx - P, base - bh * 0.2, P * 2, bh * 0.9);
+    fg.fillStyle = '#1a1c2c'; fg.fillRect(cx - bw / 2 - P, base - bh - P, bw + P * 2, bh + P * 2);
+    fg.fillStyle = '#b86f32'; fg.fillRect(cx - bw / 2, base - bh, bw, bh);
+    fg.fillStyle = '#e0a463'; fg.fillRect(cx - bw / 2, base - bh, bw, P);
+    fg.fillStyle = '#7a4419'; fg.fillRect(cx - bw / 2, base - P, bw, P);
+    fg.textAlign = 'center'; fg.textBaseline = 'top';
+    fg.fillStyle = '#fff1d6'; fg.fillText('SOLO', cx, base - bh + P * 2);
+    fg.fillStyle = '#ffcd75'; fg.fillText('HEINZ', cx, base - bh + P * 3 + tam);
+    fondo = f;
+    sueloY = suelo * P;
+  }
+
   function medir() {
     const r = zona.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
     W = r.width; H = r.height;
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.imageSmoothingEnabled = false;
+    u = Math.max(2.6, Math.min(4.6, W / 105));
+    P = Math.max(2, Math.round(u * 0.8));
+    pintarFondo();
   }
+  if (document.fonts && document.fonts.ready) await Promise.race([document.fonts.ready, esperar(1500)]);
   medir();
+  ctx.drawImage(fondo, 0, 0, W, H);
   await dialogo(cont.intro);
   if (!ctl.vivo()) return esperarSiempre();
   for (const t of ['3', '2', '1', '¡YA!']) { cuenta.textContent = t; Sonido.sfx('tap'); await esperar(650); }
@@ -201,14 +297,15 @@ async function nivelKetchup(ctl, cont) {
   window.addEventListener('resize', () => { if (ctl.vivo()) medir(); });
 
   return new Promise(resolve => {
-    const u = Math.max(2.6, Math.min(4.6, W / 105));
-    const sp = { k: sprite('ketchup'), m: sprite('mostaza'), t: sprite('tomateDorado'), p: sprite('papas') };
-    const caja = { w: 12 * u * 1.6, h: 11 * u * 1.6, x: W / 2, objetivo: W / 2 };
-    let items = [], textos = [], pts = 0, ultimo = 0, proxSpawn = 500;
-    let lento = false, pausa = false, mostazas = 0, ofrecido = false, fin = false, temblor = 0;
+    const sp = { k: sprite('heinz'), m: sprite('ensalada'), t: sprite('heinzDorado'), p: sprite('papasCaja'), nube: sprite('nube') };
+    const escala = { k: 0.72, m: 0.74, t: 0.8 };
+    const caja = { w: 0, h: 0, x: W / 2, objetivo: W / 2, aplastar: 0, inclinar: 0 };
+    let items = [], textos = [], parts = [], pts = 0, ultimo = 0, proxSpawn = 500;
+    let lento = false, pausa = false, malas = 0, ofrecido = false, fin = false, temblor = 0, tinte = 0;
+    const nubes = [0, 1, 2].map(i => ({ x: Math.random() * W, y: H * (0.08 + i * 0.12), v: 6 + i * 5, e: 0.8 + i * 0.25 }));
 
     function pintarLento() {
-      $('#modoLento', s).textContent = lento ? '🐢 MODO LENTO' : '';
+      $('#modoLento', s).textContent = lento ? '🐢' : '';
       pistaBtn.textContent = lento ? '🐇 Normal' : '🐢 Más lento';
     }
     pistaBtn.onclick = () => { lento = !lento; Sonido.sfx('tap'); pintarLento(); };
@@ -224,23 +321,34 @@ async function nivelKetchup(ctl, cont) {
     function crear() {
       const avance = pts / meta, r = Math.random();
       const tipo = r < 0.06 ? 't' : (r < 0.26 + avance * 0.12 ? 'm' : 'k');
-      const e = tipo === 't' ? u * 1.4 : u;
+      const e = u * escala[tipo];
       const w = sp[tipo].width * e, h = sp[tipo].height * e;
       items.push({
         tipo, w, h, x: w / 2 + Math.random() * (W - w), y: -h,
         vy: H * (0.3 + avance * 0.28) * (0.85 + Math.random() * 0.3),
-        giro: (Math.random() - 0.5) * 0.7, fase: Math.random() * 6,
+        giro: (Math.random() - 0.5) * 0.7, fase: Math.random() * 6, chispa: 0,
       });
     }
     function flotante(x, y, t, color) { textos.push({ x, y, t, color, vida: 1 }); }
+    function estallido(x, y, n, colores, fuerza = 1, gravedad = 900) {
+      for (let i = 0; i < n; i++) {
+        const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.2;
+        const v = (140 + Math.random() * 220) * fuerza;
+        parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: gravedad, vida: 0.6 + Math.random() * 0.5,
+          color: colores[Math.floor(Math.random() * colores.length)], t: P * (Math.random() < 0.3 ? 2 : 1) });
+      }
+    }
 
     function atrapar(it, cy) {
+      caja.aplastar = 1;
+      const bx = it.x, by = cy + caja.h * 0.25;
       if (it.tipo === 'm') {
-        pts = Math.max(0, pts - 2); mostazas++; temblor = 0.3;
-        Sonido.sfx('mostaza'); flotante(it.x, cy, '-2', '#feae34');
+        pts = Math.max(0, pts - 2); malas++; temblor = 0.3; tinte = 1;
+        Sonido.sfx('ensalada'); flotante(bx, cy, '-2', '#a7f070');
+        estallido(bx, by, 10, ['#38b764', '#a7f070', '#1e7a3c', '#e43b44'], 0.8);
         if (navigator.vibrate) navigator.vibrate(80);
-        if (Math.random() < 0.6) burbuja(azar(cont.frasesMostaza), 1500);
-        if (mostazas >= 3 && !lento && !ofrecido) {
+        if (Math.random() < 0.6) burbuja(azar(frasesMalas), 1500);
+        if (malas >= 3 && !lento && !ofrecido) {
           ofrecido = true; pausa = true;
           elegir(cont.ofrecerLento, ['Sí, porfa 🐢', 'No, yo puedo 💪']).then(r => {
             if (r === 0) { lento = true; pintarLento(); }
@@ -248,18 +356,22 @@ async function nivelKetchup(ctl, cont) {
           });
         }
       } else {
-        const v = it.tipo === 't' ? 3 : 1;
+        const dorado = it.tipo === 't', v = dorado ? 3 : 1;
         pts = Math.min(meta, pts + v);
-        Sonido.sfx('ketchup'); flotante(it.x, cy, '+' + v, it.tipo === 't' ? '#ffcd75' : '#f4f4f4');
+        Sonido.sfx(dorado ? 'dorado' : 'ketchup');
+        flotante(bx, cy, '+' + v, dorado ? '#ffcd75' : '#f4f4f4');
+        estallido(bx, by, dorado ? 16 : 9, dorado ? ['#ffcd75', '#fff3b0', '#f4f4f4'] : ['#e43b44', '#a22633', '#ff7b7b']);
         if (Math.random() < 0.12) burbuja(azar(cont.frasesKetchup), 1200);
       }
       $('#pts', s).textContent = pts;
+      $('#barra', s).style.width = (pts / meta * 100) + '%';
       ctl.progreso(pts / meta);
       if (pts >= meta && !fin) {
         fin = true; items = [];
         Sonido.sfx('victoria');
+        for (let i = 0; i < 5; i++) setTimeout(() => estallido(W * (0.15 + Math.random() * 0.7), H * (0.25 + Math.random() * 0.3), 22, ['#e43b44', '#ffcd75', '#f4f4f4', '#a7f070'], 1.2, 500), i * 250);
         burbuja(cont.ganar, 1900);
-        setTimeout(resolve, 2000);
+        setTimeout(resolve, 2200);
       }
     }
 
@@ -270,26 +382,46 @@ async function nivelKetchup(ctl, cont) {
       requestAnimationFrame(cuadro);
       if (pausa) return;
       const factor = lento ? 0.55 : 1;
-      const cy = H - caja.h - H * 0.05;
+      caja.w = sp.p.width * u * 1.15; caja.h = sp.p.height * u * 1.15;
+      const cy = sueloY - caja.h + P;
 
       if (!fin) {
         proxSpawn -= dt * 1000 * factor;
         if (proxSpawn <= 0) { crear(); proxSpawn = (950 - (pts / meta) * 400) * (0.8 + Math.random() * 0.4); }
       }
+      const antes = caja.x;
       caja.x += (caja.objetivo - caja.x) * Math.min(1, dt * 22);
+      const vel = dt ? (caja.x - antes) / dt : 0;
+      caja.inclinar += (vel * 0.0004 - caja.inclinar) * Math.min(1, dt * 12);
+      caja.inclinar = Math.max(-0.25, Math.min(0.25, caja.inclinar));
+      caja.aplastar = Math.max(0, caja.aplastar - dt * 5);
+
       for (const it of items) {
         it.y += it.vy * dt * factor;
-        const fondo = it.y + it.h;
-        if (!it.hecho && fondo >= cy + caja.h * 0.2 && fondo <= cy + caja.h * 0.95 &&
-            Math.abs(it.x - caja.x) < caja.w / 2 + it.w * 0.25) {
+        const fondoIt = it.y + it.h;
+        if (it.tipo === 't' && (it.chispa -= dt) <= 0) {
+          it.chispa = 0.07;
+          parts.push({ x: it.x + (Math.random() - 0.5) * it.w, y: it.y + Math.random() * it.h, vx: 0, vy: 30, g: 0, vida: 0.5, color: Math.random() < 0.5 ? '#fff3b0' : '#ffcd75', t: P });
+        }
+        if (!it.hecho && fondoIt >= cy + caja.h * 0.3 && fondoIt <= cy + caja.h * 0.95 &&
+            Math.abs(it.x - caja.x) < caja.w / 2 + it.w * 0.2) {
           it.hecho = true; atrapar(it, cy);
         }
       }
       items = items.filter(it => !it.hecho && it.y < H + 10);
+      for (const p of parts) { p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vida -= dt; }
+      parts = parts.filter(p => p.vida > 0);
 
-      ctx.clearRect(0, 0, W, H);
+      // ---- dibujo ----
       ctx.save();
-      if (temblor > 0) { temblor -= dt; ctx.translate((Math.random() - 0.5) * 8, (Math.random() - 0.5) * 8); }
+      if (temblor > 0) { temblor -= dt; ctx.translate(Math.round((Math.random() - 0.5) * 8), Math.round((Math.random() - 0.5) * 8)); }
+      ctx.drawImage(fondo, 0, 0, W, H);
+      for (const n of nubes) {
+        n.x += n.v * dt;
+        const nw = sp.nube.width * P * n.e, nh = sp.nube.height * P * n.e;
+        if (n.x > W + 10) n.x = -nw;
+        ctx.globalAlpha = 0.85; ctx.drawImage(sp.nube, Math.round(n.x), Math.round(n.y), nw, nh); ctx.globalAlpha = 1;
+      }
       for (const it of items) {
         ctx.save();
         ctx.translate(it.x, it.y + it.h / 2);
@@ -297,14 +429,32 @@ async function nivelKetchup(ctl, cont) {
         ctx.drawImage(sp[it.tipo], -it.w / 2, -it.h / 2, it.w, it.h);
         ctx.restore();
       }
-      ctx.drawImage(sp.p, caja.x - caja.w / 2, cy, caja.w, caja.h);
+      // sombra y caja de papas (se aplasta al atrapar y se inclina al moverse)
+      ctx.fillStyle = 'rgba(26,28,44,.35)';
+      ctx.beginPath(); ctx.ellipse(caja.x, sueloY + P, caja.w * 0.42, P * 1.5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.save();
+      ctx.translate(caja.x, cy + caja.h);
+      ctx.rotate(caja.inclinar);
+      ctx.scale(1 + caja.aplastar * 0.12, 1 - caja.aplastar * 0.14);
+      ctx.drawImage(sp.p, -caja.w / 2, -caja.h, caja.w, caja.h);
       ctx.restore();
+      for (const p of parts) {
+        ctx.globalAlpha = Math.min(1, p.vida * 2);
+        ctx.fillStyle = p.color; ctx.fillRect(Math.round(p.x), Math.round(p.y), p.t, p.t);
+      }
+      ctx.globalAlpha = 1;
+      ctx.restore();
+      if (tinte > 0) {
+        tinte = Math.max(0, tinte - dt * 3);
+        ctx.fillStyle = `rgba(56,183,100,${tinte * 0.25})`; ctx.fillRect(0, 0, W, H);
+      }
 
-      ctx.font = `${Math.round(u * 4)}px "Press Start 2P", monospace`;
-      ctx.textAlign = 'center';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
       for (const t of textos) {
         t.vida -= dt * 1.2; t.y -= dt * 45;
-        ctx.globalAlpha = Math.max(0, t.vida);
+        const pop = 1 + Math.max(0, t.vida - 0.8) * 3;
+        ctx.font = `${Math.round(u * 4 * pop)}px "Press Start 2P", monospace`;
+        ctx.globalAlpha = Math.max(0, Math.min(1, t.vida * 1.5));
         ctx.fillStyle = '#1a1c2c'; ctx.fillText(t.t, t.x + 2, t.y + 2);
         ctx.fillStyle = t.color; ctx.fillText(t.t, t.x, t.y);
       }

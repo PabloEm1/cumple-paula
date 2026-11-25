@@ -68,7 +68,8 @@ const Sonido = (() => {
       case 'error': tono(220, t, 0.25, 'sawtooth', 0.1, master, 110); break;
       case 'estrella': arpegio([76, 79, 84, 88], 0.06, 0.14, 'square', 0.1); break;
       case 'ketchup': arpegio([84, 91], 0.05, 0.08, 'square', 0.08); break;
-      case 'mostaza': tono(170, t, 0.32, 'square', 0.1, master, 60); break;
+      case 'ensalada': tono(170, t, 0.32, 'square', 0.1, master, 60); break;
+      case 'dorado': arpegio([84, 88, 91, 96], 0.04, 0.1, 'square', 0.08); break;
       case 'fragmento': arpegio([72, 76, 79, 84, 79, 84, 88], 0.09, 0.2, 'square', 0.09); break;
       case 'victoria': arpegio([72, 76, 79, 84, 84, 88, 91, 96], 0.1, 0.25, 'square', 0.09); break;
       case 'magia': arpegio([72, 74, 76, 79, 81, 84, 86, 88, 91, 93, 96, 98], 0.06, 0.3, 'triangle', 0.14); break;

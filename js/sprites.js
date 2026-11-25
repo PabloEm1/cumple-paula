@@ -15,6 +15,18 @@ const PALETA = {
   d: '#a22633', // rojo oscuro
   g: '#38b764', // verde
   s: '#94b0c2', // gris
+  // colores extra para el Valle del Ketchup
+  h: '#ff7b7b', // brillo rojo
+  D: '#6e1423', // rojo muy oscuro
+  c: '#fff1d6', // crema (etiqueta)
+  L: '#a7f070', // verde lechuga claro
+  v: '#1e7a3c', // verde oscuro
+  u: '#e0a463', // madera clara
+  n: '#b86f32', // madera
+  N: '#7a4419', // madera oscura
+  f: '#ffd85e', // papa frita
+  F: '#e0a030', // papa frita sombra
+  Y: '#fff3b0', // punta de la papa
 };
 
 const SPRITES = {
@@ -90,6 +102,80 @@ const SPRITES = {
     '..krrrrrrk..',
     '..kkkkkkkk..',
   ],
+  heinz: [
+    '....kkkk....',
+    '...kwwwsk...',
+    '...kwwwsk...',
+    '...kssssk...',
+    '....khrk....',
+    '....khrk....',
+    '....kcck....',
+    '....kcck....',
+    '....khrk....',
+    '....khrk....',
+    '...khrrrk...',
+    '..khrrrrdk..',
+    '.khwrrrrrdk.',
+    '.khwrrrrrdk.',
+    '.khccccccdk.',
+    '.khcccgccdk.',
+    '.khccorccdk.',
+    '.khccrrccdk.',
+    '.khccccccdk.',
+    '.khrcDDcrdk.',
+    '.khrrccrrdk.',
+    '.khrrrrrrdk.',
+    '.khrrrrrrdk.',
+    '.khdrrrrDdk.',
+    '..kddddddk..',
+    '...kDDDDk...',
+    '....kkkk....',
+  ],
+  ensalada: [
+    '....................',
+    '.......kkkkk........',
+    '....kkkLLLLLkkkkk...',
+    '...kwrkLLgLLkggLLk..',
+    '...krrgLLLgLggvLLk..',
+    '..kggvgLgLvvvvgggk..',
+    '..kgggLLLLwrvvgLLLk.',
+    '.kvvvgLLLrrrrvgLLLk.',
+    '.kvvvgLLLkrrvvkLLLk.',
+    'kuuuuuuuuuuuuuuuuuuk',
+    'knnunnnnnnnnnnnnnNnk',
+    '.knnunnnnnnnnnnnNNk.',
+    '..knnnnnnnnnnnnNNk..',
+    '...kkNNNNNNNNNNkk...',
+    '.....kkkkkkkkkk.....',
+  ],
+  papasCaja: [
+    '........kk........',
+    '....kk.kYFkk..kk..',
+    '...kYFkkfFYFkkYFk.',
+    '..kkfFYFfFfFkkfFk.',
+    '.kYFfFfFfFfFYFfFk.',
+    '.kfFfFfFfFfFfFfFk.',
+    '.kfFfFfFfFfFfFfFk.',
+    'kddddddddddddddddk',
+    'khrrrrrrrrrrrrrrdk',
+    'khrrrrrrrrrrrrrrdk',
+    'khrrrrwwrrwwrrrrdk',
+    '.khrrrwwwwwwrrrdk.',
+    '.khrrrrwwwwrrrrdk.',
+    '.khrrrrrwwrrrrrdk.',
+    '..khrrrrrrrrrrdk..',
+    '..khrrrrrrrrrrdk..',
+    '..khdddddddddddk..',
+    '...kkkkkkkkkkkk...',
+  ],
+
+  nube: [
+    '....wwww.......',
+    '..wwwwwwww.ww..',
+    '.wwwwwwwwwwwwww',
+    'wwwwwwwwwwwwwww',
+    '.sssssssssssss.',
+  ],
   corazon: [
     '.kk...kk.',
     'kppk.kppk',
@@ -105,6 +191,7 @@ const SPRITES = {
 // Variantes: mismo dibujo con colores cambiados
 const VARIANTES = {
   mostaza: ['ketchup', { r: '#feae34', d: '#c26a12' }],
+  heinzDorado: ['heinz', { r: '#ffcd75', h: '#fff3b0', d: '#e08a1e', D: '#a85a12', o: '#fff3b0' }],
   tomateDorado: ['tomate', { r: '#ffcd75', g: '#ffe9a8' }],
 };
 
