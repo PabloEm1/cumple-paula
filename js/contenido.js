@@ -122,13 +122,13 @@ window.CONTENIDO = {
         },
         {
           foto: "fotos/fiesta-18.webp",
-          opciones: ["La fiesta de los 18", "Una boda", "Una graduación", "Una cena de Navidad"],
-          pista: "Hay pastel, velas... y un número muy importante 🎂",
+          opciones: ["Los 18 de Noelia", "Una boda", "Una graduación", "Una cena de Navidad"],
+          pista: "Hay pastel, un 18 en las velas... y era de tu mejor amiga 🎂",
         },
         {
           foto: "fotos/bebe.jpg",
-          opciones: ["Con un bebé en brazos", "Con un perrito", "Con un peluche gigante", "Con un ramo de flores"],
-          pista: "Alguien muy chiquito está durmiendo 👶",
+          opciones: ["Con Thiago en brazos", "Con un perrito", "Con un peluche gigante", "Con un ramo de flores"],
+          pista: "Alguien muy chiquito está durmiendo... es el bebé de Cindy 👶",
         },
       ],
       final: [
@@ -157,7 +157,7 @@ window.CONTENIDO = {
       ganar: "¡Heinz para toda la vida! 🍅",
       final: [
         "¡Increíble! Nunca había visto a nadie atrapar tanto Heinz 🍅",
-        "Por cierto, unos piratas que pasaban por aquí preguntaron por una tal \"Patapalo\"... no sé quién será 🏴‍☠️🤔",
+        "Por cierto, alguien pasó por aquí preguntando por una tal \"Patapalo\"... no sé quién será 👀🤔",
         "¡Tercer fragmento! 📜 Ahora vamos al Cine Encantado 🎬",
       ],
     },
