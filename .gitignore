@@ -1,0 +1,5 @@
+# La carta sin cifrar NO se sube nunca
+carta.txt
+# Las fotos sin cifrar tampoco: se sube solo fotos-cifradas/
+fotos/
+.claude/

@@ -1,0 +1,8 @@
+// Archivo generado automáticamente: NO lo edites a mano.
+// Para cambiar la carta edita carta.txt y ejecuta: node herramientas/cifrar-carta.js
+window.CARTA_CIFRADA = {
+  iter: 200000,
+  salt: "IKxHqejarF6ZDEss5sx3MA==",
+  iv: "FfDAFB7wCxrHeply",
+  datos: "LzSIRM4NIDG+eO0cfLwzS7/XCfrxSV0ZHerAMgcKCDCNHZulHr0R+0KV/Pidpso+ZwLEJ9qjWdoxEJwOW3Yc8endXIH5gOuH7CEgFPq4xGR+xoTg2gA3aA+Aw+yrQf8fATFyibPiejkOgDE7HjzTj3QAVLJ+CNGYSONJew8TLDhMrpOq+eK9ZG18x7cpUR19JG8NmrFzr4K2y0iVDGZY3D3X1noU6P+4iIPIIMs0sA3XBJ4XwFGJFcogvA1+xHiA0SYR9lQWUwha7TjUM47jUPNZqm0ZYyEdLhFroSHFmV1fEuI/x3jc9cwMs+Xu7QTbGfd5AHfAiv8I0cPnyKQLNPmjL0+d7sTd68pcNnIpkV5Wz920M80ly3rRRlSJR8VKvUxufgE+Fdu5cXk2OMDxbaGNvBe7xRJHjU/3h/XJI2mMJCuYkzlt8NP4kjMeXQ8TPCpqMMKSw/G0sZBTnbG3cHrRKEWBATZkE56a43p0XjrJpgVvdxkMngQ6dnUdFLBAYwBniOEMITu6iGiShPCntcV1yG3LwP7UCMTXYx57JToiggRfBG44lBeCBYXiSBU15sNS7BTB9GhX+E7ME+cgpu87dTdTnDzRADZ90tTZmMQIPo2QqKqyV+9lrCu5+TDOyVlFyuQeDakA5qMD/sNArxoOIfeb6idhdTz0fD+GeJWEv2py43MoIs4J/ei2IAh4o0+ibC8bdl9Bh5+Y7WZYGHQalo8WipzrgXhSVXWhOmEZpaI="
+};
