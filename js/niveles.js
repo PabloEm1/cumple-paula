@@ -35,6 +35,7 @@ function jugarOpciones(s, ctl, opciones, pista, alFallar) {
       if (b.dataset.ok) {
         hecho = true;
         b.classList.add('bien');
+        Efectos.en(b, 20);
         $$('.opcion', ops).forEach(x => { x.disabled = true; });
         Sonido.sfx('bien');
         burbuja(azar(C.bromasAcierto), 1400);
@@ -103,7 +104,7 @@ async function nivelMemoria(ctl, cont) {
       if (!abierta) { abierta = c; return; }
       const a = abierta; abierta = null;
       if (mazo[+a.dataset.k] === mazo[+c.dataset.k]) {
-        [a, c].forEach(x => { x.classList.add('hecha'); x.classList.remove('abierta'); });
+        [a, c].forEach(x => { x.classList.add('hecha'); x.classList.remove('abierta'); Efectos.en(x, 12); });
         encontrados++;
         $('#pares', s).textContent = encontrados;
         Sonido.sfx('bien');
@@ -542,6 +543,7 @@ async function nivelPuzzle(ctl, cont) {
       ocupado = true;
       tablero.classList.add('resuelto', 'viendo');
       Sonido.sfx('victoria');
+      Efectos.en(tablero, 50, Efectos.FIESTA, 1.6);
       await esperar(1800);
       resolve();
     }

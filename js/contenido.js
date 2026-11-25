@@ -157,7 +157,7 @@ window.CONTENIDO = {
       ganar: "¡Heinz para toda la vida! 🍅",
       final: [
         "¡Increíble! Nunca había visto a nadie atrapar tanto Heinz 🍅",
-        "Por cierto, unos piratas que pasaban por aquí preguntaron por una tal \"Pata Palo\"... no sé quién será 🏴‍☠️🤔",
+        "Por cierto, unos piratas que pasaban por aquí preguntaron por una tal \"Patapalo\"... no sé quién será 🏴‍☠️🤔",
         "¡Tercer fragmento! 📜 Ahora vamos al Cine Encantado 🎬",
       ],
     },

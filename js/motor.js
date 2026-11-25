@@ -102,6 +102,7 @@ function foto(ruta) { return FOTOS_URL[ruta] || ruta; }
 function pantalla(clase, html) {
   app.innerHTML = `<div class="pantalla ${clase}">${html}</div>`;
   const el = app.firstElementChild;
+  if (typeof Escena !== 'undefined') Escena.poner(clase);
   $$('.btn-sonido', el).forEach(b => {
     const pintar = () => { b.textContent = Sonido.activo() ? '🔊' : '🔇'; };
     pintar();
@@ -115,14 +116,14 @@ function hudEstrellas(n) {
 }
 
 function crearCielo() {
-  const cielo = document.getElementById('cielo');
-  let html = '';
-  for (let i = 0; i < 60; i++) {
-    const g = Math.random() < 0.15 ? ' grande' : '';
-    html += `<span class="astro${g}" style="left:${(Math.random() * 100).toFixed(1)}%;top:${(Math.random() * 100).toFixed(1)}%;animation-delay:${(Math.random() * 3).toFixed(2)}s;animation-duration:${(2 + Math.random() * 3).toFixed(2)}s"></span>`;
-  }
-  cielo.innerHTML = html;
+  Escena.iniciar(document.getElementById('cielo'));
+  Efectos.iniciar();
+  document.documentElement.style.setProperty('--img-estrella', `url(${spriteURL('estrella')})`);
 }
+
+// Iconos en pixel art de cada lugar del mapa
+const ICONOS = { memoria: 'pino', borrosa: 'camara', ketchup: 'heinz', cine: 'palomitas', puzzle: 'castillo' };
+function icono(nombre, clase = '') { return `<img class="icono pixelado ${clase}" src="${spriteURL(nombre)}" alt="">`; }
 
 function cargarImagen(src) {
   return new Promise(res => {
@@ -240,6 +241,7 @@ function efectoEstrella(total) {
     } catch (_) { await esperar(750); }
     img.remove();
     if (cont && cont.isConnected) {
+      Efectos.en(cont, 8, Efectos.DORADO, 0.6);
       cont.textContent = total;
       const h = cont.parentElement; h.classList.remove('pop'); void h.offsetWidth; h.classList.add('pop');
     }
@@ -321,7 +323,7 @@ function pantallaClave() {
   let digitos = '', intentos = 0, ocupado = false;
   const s = pantalla('clave', `
     <div class="titulo-pixel">${esc(txt(C.clave.titulo).toUpperCase())}</div>
-    <div class="cofre">🔒</div>
+    <div class="cofre">${icono('cofre')}</div>
     <p class="clave-texto">${esc(txt(C.clave.texto))}</p>
     <div class="visor"><span></span><span></span><b>/</b><span></span><span></span></div>
     <p class="clave-pista"></p>
@@ -338,7 +340,8 @@ function pantallaClave() {
       CARTA = datos.partes;
       estado.clave = digitos; guardar();
       descifrarFotos(digitos);
-      $('.cofre', s).textContent = '🔓'; visor.classList.add('ok');
+      $('.cofre', s).innerHTML = icono('cofreAbierto'); visor.classList.add('ok');
+      Efectos.en($('.cofre', s), 36, Efectos.DORADO, 1.3);
       pistaEl.textContent = '';
       Sonido.sfx('fragmento');
       await esperar(1300);
@@ -386,7 +389,7 @@ function pantallaMapa() {
     const cls = i < comp ? 'hecho' : (i === comp ? 'actual' : 'bloqueado');
     const [x, y] = POS_MAPA[i];
     return `<button class="nodo ${cls}" data-i="${i}" style="left:${x}%;top:${y}%">
-      <span class="circulo"><span>${i > comp ? '🔒' : cont.icono}</span>${i < comp ? '<b class="check">✓</b>' : ''}</span>
+      <span class="circulo"><span>${i > comp ? icono('candado', 'chico') : icono(ICONOS[n.id] || 'estrella')}</span>${i < comp ? '<b class="check">✓</b>' : ''}</span>
       <span class="etiqueta">${esc(txt(cont.lugar).toUpperCase())}</span></button>`;
   }).join('');
   const blu = comp < 5
@@ -445,7 +448,9 @@ async function pantallaFragmento(i, cont) {
     <p class="nota">Se podrá leer cuando juntes los 5…</p>
     <button class="btn oculto">Continuar ▶</button>`);
   Sonido.sfx('fragmento');
-  await esperar(1100);
+  await esperar(950);
+  Efectos.en($('.pieza-grande', s), 40, Efectos.DORADO, 1.3);
+  await esperar(150);
   await dialogo(cont.final);
   const b = $('.btn', s);
   b.classList.remove('oculto');
