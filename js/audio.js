@@ -1,5 +1,5 @@
 // =====================================================================
-//  Sonido 8-bit generado por código (sin archivos, sin derechos de autor)
+//  Sonido 8-bit generado por código + la canción de la carta (archivo en musica/)
 // =====================================================================
 'use strict';
 
@@ -26,7 +26,24 @@ const Sonido = (() => {
     },
   };
 
+  // ---- Canción de archivo para la carta (CONTENIDO.final.cancion) ----
+  // El iPhone solo deja sonar un <audio> si se le dio play dentro de un toque,
+  // así que en el primer toque del juego la "desbloqueamos" en silencio.
+  let cancion = null;
+  function prepararCancion() {
+    const src = window.CONTENIDO && CONTENIDO.final && CONTENIDO.final.cancion;
+    if (!src || cancion) return;
+    cancion = new Audio(src);
+    cancion.loop = true;
+    cancion.preload = 'auto';
+    cancion.muted = true;
+    const listo = () => { if (pistaActual !== 'cancion') { cancion.pause(); cancion.currentTime = 0; } cancion.muted = !activo; };
+    const p = cancion.play();
+    if (p && p.then) p.then(listo, listo); else listo();
+  }
+
   function iniciar() {
+    prepararCancion();
     if (ctx) { if (ctx.state !== 'running') ctx.resume(); return; }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
@@ -36,6 +53,10 @@ const Sonido = (() => {
     bus = ctx.createGain(); bus.gain.value = 0.5; bus.connect(master);
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && ctx.state !== 'running') ctx.resume();
+      // la canción se pausa si sale de la página y sigue al volver
+      if (cancion && pistaActual === 'cancion') {
+        if (document.hidden) cancion.pause(); else cancion.play().catch(() => {});
+      }
     });
     if (pistaPedida) musica(pistaPedida);
   }
@@ -82,12 +103,22 @@ const Sonido = (() => {
     tono(f(midi + 12), ctx.currentTime, dur * 0.6, 'square', 0.03);
   }
 
+  // nombre: 'aventura', 'final', 'cancion' (el archivo de la carta) o null (silencio)
   function musica(nombre) {
+    if (nombre === 'cancion' && !(window.CONTENIDO && CONTENIDO.final && CONTENIDO.final.cancion)) nombre = 'final';
     pistaPedida = nombre;
     if (!ctx || pistaActual === nombre) return;
     pistaActual = nombre;
     clearInterval(timer); timer = null;
+    if (cancion && nombre !== 'cancion') cancion.pause();
     if (!nombre) return;
+    if (nombre === 'cancion') {
+      prepararCancion();
+      cancion.currentTime = 0;
+      cancion.muted = !activo;
+      cancion.play().catch(() => {});
+      return;
+    }
     const P = PISTAS[nombre];
     const dur = 60 / P.bpm / 2;
     paso = 0; t0 = ctx.currentTime + 0.1;
@@ -109,6 +140,7 @@ const Sonido = (() => {
     activo = !activo;
     localStorage.setItem('paula19_sonido', activo ? 'si' : 'no');
     if (master) master.gain.value = activo ? 0.6 : 0;
+    if (cancion) cancion.muted = !activo;
     return activo;
   }
 

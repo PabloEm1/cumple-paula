@@ -3,3 +3,5 @@ carta.txt
 # Las fotos sin cifrar tampoco: se sube solo fotos-cifradas/
 fotos/
 .claude/
+# El audio original sin convertir (se usa musica/cancion-carta.m4a)
+musica/videoplayback.m4a

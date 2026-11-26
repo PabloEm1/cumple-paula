@@ -298,6 +298,10 @@ window.CONTENIDO = {
       "Y las 19 estrellas ✨",
       "Ahora vamos a unir las piezas para que leas la carta de {deParte}. Esta vez la sujeto con las cuatro manos, prometido 👐👐 ¿Lista?",
     ],
+    // Canción que empieza a sonar cuando se unen las piezas de la carta y sigue
+    // mientras la lee. Mejor .m4a o .mp3 (en iPhone funcionan seguro).
+    // Si la quitas (cancion: ""), suena la musiquita 8-bit de siempre.
+    cancion: "musica/cancion-carta.m4a",
     tituloCarta: "Para {nombre}",
     botonEstrellas: "★ Una cosa más...",
     felicitacion: "¡Feliz cumpleaños, {nombre}!",

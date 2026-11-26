@@ -5,8 +5,8 @@
 
 async function secuenciaFinal() {
   nivelToken = null;
+  if (estado.finalVisto) { Sonido.musica('cancion'); return mostrarCarta(false); }
   Sonido.musica('final');
-  if (estado.finalVisto) return mostrarCarta(false);
   await dialogo(C.final.antes);
   await unirFragmentos();
   estado.finalVisto = true; guardar();
@@ -15,6 +15,7 @@ async function secuenciaFinal() {
 
 async function unirFragmentos() {
   const s = pantalla('union', `<div class="hoja-union"></div><div class="destello"></div>`);
+  Sonido.musica(null);   // un momento de silencio mientras aparecen las piezas...
   const hoja = $('.hoja-union', s);
   const { width: W, height: H } = hoja.getBoundingClientRect();
   const n = CARTA.length, J = 9, D = 12;
@@ -47,7 +48,8 @@ async function unirFragmentos() {
   }, i * 280));
   await esperar(piezas.length * 280 + 700);
 
-  // 2. vuelan y se unen
+  // 2. vuelan y se unen... y empieza la canción
+  Sonido.musica('cancion');
   Sonido.sfx('magia');
   piezas.forEach((p, i) => {
     p.style.transition = `transform 1.1s cubic-bezier(.5,-0.35,.3,1.25) ${i * 0.13}s`;
