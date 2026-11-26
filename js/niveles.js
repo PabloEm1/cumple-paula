@@ -480,7 +480,7 @@ async function nivelCine(ctl, cont) {
   const resumen = $('.resumen-cine', s);
   await dialogo(cont.intro);
 
-  // Blu "proyecta" el resumen letra a letra
+  // Stitch "proyecta" el resumen letra a letra
   let maquina = null;
   function proyectar(texto) {
     clearInterval(maquina);
@@ -549,7 +549,7 @@ async function nivelPuzzle(ctl, cont) {
   if (!ctl.vivo()) return esperarSiempre();
 
   const pos = [...Array(TOTAL).keys()]; // pos[ficha] = casilla donde está
-  let pila = [HUECO];                   // camino del hueco (para que Blu pueda resolverlo)
+  let pila = [HUECO];                   // camino del hueco (para que Stitch pueda resolverlo)
   const ady = (a, b) => Math.abs(Math.floor(a / N) - Math.floor(b / N)) + Math.abs(a % N - b % N) === 1;
   function moverCelda(c) {
     const h = pos[HUECO];

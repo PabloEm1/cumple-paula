@@ -354,8 +354,16 @@ function sprite(nombre) {
   return _spriteCanvas[nombre];
 }
 
+// Dibujos hechos en Aseprite (carpeta Sprites/), exportados a img/ con exportar-sprites.bat.
+// Si un nombre está aquí, se usa la imagen en vez del dibujo con letras de arriba.
+const IMAGENES = {
+  blu: 'img/stitch01.png',      // el compañero: diálogos, globitos y mapa
+  bluMira: 'img/stitch02.png',  // el compañero mirando hacia arriba: pantalla de inicio
+};
+
 // imagen grande y nítida (para <img>)
 function spriteURL(nombre) {
+  if (IMAGENES[nombre]) return IMAGENES[nombre];
   if (!_spriteURL[nombre]) _spriteURL[nombre] = crearSprite(nombre, 8).toDataURL();
   return _spriteURL[nombre];
 }

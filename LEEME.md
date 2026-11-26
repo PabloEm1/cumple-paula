@@ -9,6 +9,14 @@ Juego web para el cumpleaños de Paula (17 de diciembre). Se abre con un link en
 | Diálogos, preguntas, pistas, películas, chistes | `js/contenido.js` |
 | La carta | `carta.txt` y después doble clic en `cifrar-carta.bat` |
 | Las fotos | Carpeta `fotos/`, sus nombres en `js/contenido.js` y después doble clic en `cifrar-fotos.bat` |
+| Los dibujos del compañero | Edítalos en Aseprite en la carpeta `Sprites/` (al lado de `cumple-paula`) y después doble clic en `exportar-sprites.bat` |
+
+### Los dibujos (Aseprite)
+- `exportar-sprites.bat` convierte cada `.aseprite` de `Sprites/` en `img/<nombre>.png`, recortado al dibujo.
+- Qué dibujo sale dónde se elige en `js/sprites.js`, en `IMAGENES`:
+  - `blu` → `img/stitch01.png`: diálogos, globitos y mapa.
+  - `bluMira` → `img/stitch02.png`: pantalla de inicio.
+- La carpeta `img/` **sí** se sube a GitHub.
 
 El resto de archivos no hace falta tocarlo.
 

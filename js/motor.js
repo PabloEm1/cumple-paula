@@ -148,7 +148,7 @@ async function imagenCuadrada(src, tam = 600) {
 }
 
 // ---------------------------------------------------------------------
-//  Diálogos de Blu
+//  Diálogos de Stitch (el compañero)
 // ---------------------------------------------------------------------
 function cajaDialogoHTML(contenido) {
   return `<div class="dialogo"><img class="retrato pixelado" src="${spriteURL('blu')}" alt="">
@@ -289,7 +289,7 @@ function pantallaInicio() {
   const s = pantalla('inicio', `
     <button class="btn-mini btn-sonido esquina"></button>
     <div class="titulo-juego">${titulo}</div>
-    <img class="blu-grande pixelado" src="${spriteURL('blu')}" alt="">
+    <img class="blu-grande pixelado" src="${spriteURL('bluMira')}" alt="">
     <div class="press parpadea">TOCA PARA EMPEZAR</div>
     <div class="pie">★ ★ ★</div>`);
   s.addEventListener('click', () => {
