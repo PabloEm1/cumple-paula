@@ -44,6 +44,10 @@ img { -webkit-user-drag: none; }
 
 .pantalla { position: absolute; inset: 0; display: flex; flex-direction: column; animation: aparecer .35s steps(5); }
 @keyframes aparecer { from { opacity: 0; } }
+/* transición entre pantallas (ver Transicion en js/motor.js) */
+.pantalla.saliente { z-index: 2; pointer-events: none; animation: none; }
+.pantalla.entrante { visibility: hidden; }
+#transicion { position: fixed; left: 0; top: 0; z-index: 150; pointer-events: none; }
 
 /* ---------- textos ---------- */
 .titulo-pixel {

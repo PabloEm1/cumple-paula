@@ -48,6 +48,12 @@ window.CONTENIDO = {
     "No toqué nada mientras no estabas. Casi nada. Sigamos donde lo dejamos 👉",
   ],
 
+  // Globitos en el mapa cuando se despeja la niebla al superar un nivel
+  mapa: {
+    nieblaFuera: "¡Mira! La niebla se fue y el camino brilla ✨",
+    todoDespejado: "¡Todo el reino brilla otra vez! Y fue gracias a ti 💙",
+  },
+
   // Frases al azar cuando falla una pregunta (niveles 2 y 4)
   bromasFallo: [
     "Mmm no. Ya sé, ya sé: tú siempre tienes la razón... pero esta vez no 😅",

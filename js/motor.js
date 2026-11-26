@@ -99,10 +99,22 @@ function foto(ruta) { return FOTOS_URL[ruta] || ruta; }
 // ---------------------------------------------------------------------
 //  Utilidades de pantalla
 // ---------------------------------------------------------------------
+// La pantalla nueva se crea al momento (el código que la usa no espera),
+// pero se ve después de la transición: la vieja se tapa con rombos y la nueva se destapa.
 function pantalla(clase, html) {
-  app.innerHTML = `<div class="pantalla ${clase}">${html}</div>`;
-  const el = app.firstElementChild;
-  if (typeof Escena !== 'undefined') Escena.poner(clase);
+  const viejas = [...app.children];
+  viejas.forEach(v => { v.classList.add('saliente'); v.querySelectorAll('[id]').forEach(e => e.removeAttribute('id')); });
+  const el = document.createElement('div');
+  el.className = `pantalla ${clase}`;
+  el.innerHTML = html;
+  app.appendChild(el);
+  const cambiar = () => {
+    viejas.forEach(v => v.remove());
+    el.classList.remove('entrante');
+    if (typeof Escena !== 'undefined') Escena.poner(clase);
+  };
+  if (viejas.length && Transicion.disponible()) { el.classList.add('entrante'); Transicion.pasar(cambiar); }
+  else { cambiar(); if (Transicion.disponible()) Transicion.pasar(null); }
   $$('.btn-sonido', el).forEach(b => {
     const pintar = () => { b.textContent = Sonido.activo() ? '🔊' : '🔇'; };
     pintar();
@@ -110,6 +122,78 @@ function pantalla(clase, html) {
   });
   return el;
 }
+
+// ---------------------------------------------------------------------
+//  Transición entre pantallas: rombos pixelados que barren en diagonal
+// ---------------------------------------------------------------------
+const Transicion = (() => {
+  const CUBRIR = 280, DESCUBRIR = 380, CELDA = 6;     // ms, ms, tamaño del rombo (pixeles de escena)
+  const COLOR = '#1a1c2c';
+  let cv = null, g = null, P = 3, fase = 0, t0 = 0, alMedio = null, corriendo = false;
+  const quieto = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function preparar() {
+    if (cv) return;
+    cv = document.createElement('canvas');
+    cv.id = 'transicion'; cv.className = 'pixelado';
+    document.body.appendChild(cv);
+    g = cv.getContext('2d');
+    medir();
+    window.addEventListener('resize', medir);
+  }
+  function medir() {
+    P = (typeof Escena !== 'undefined' && Escena.tamPixel()) || 3;
+    cv.width = Math.ceil(window.innerWidth / P); cv.height = Math.ceil(window.innerHeight / P);
+    cv.style.width = cv.width * P + 'px'; cv.style.height = cv.height * P + 'px';
+  }
+  // cobertura 0 = nada tapado, 1 = todo tapado. Barre de arriba-izquierda a abajo-derecha.
+  function dibujar(cobertura) {
+    g.clearRect(0, 0, cv.width, cv.height);
+    if (cobertura <= 0) return;
+    g.fillStyle = COLOR;
+    if (cobertura >= 1) { g.fillRect(0, 0, cv.width, cv.height); return; }
+    const cols = Math.ceil(cv.width / CELDA) + 1, filas = Math.ceil(cv.height / CELDA) + 1, diag = cols + filas - 2;
+    for (let j = 0; j < filas; j++) for (let i = 0; i < cols; i++) {
+      const orden = (i + j) / diag;
+      const local = Math.max(0, Math.min(1, cobertura * 1.7 - orden * 0.7));
+      const r = Math.round(local * CELDA);
+      if (!r) continue;
+      const cx = i * CELDA, cy = j * CELDA;
+      for (let dy = -r; dy <= r; dy++) { const a = r - Math.abs(dy); g.fillRect(cx - a, cy + dy, a * 2 + 1, 1); }
+    }
+  }
+  // Los tiempos los marcan temporizadores (así el cambio llega a su hora aunque
+  // el móvil dibuje lento); requestAnimationFrame solo dibuja los rombos.
+  let reloj = null;
+  function cuadro() {
+    if (!fase) { corriendo = false; dibujar(0); return; }
+    const dt = performance.now() - t0;
+    dibujar(fase === 1 ? Math.min(1, dt / CUBRIR) : 1 - Math.min(1, dt / DESCUBRIR));
+    requestAnimationFrame(cuadro);
+  }
+  function destapar() {
+    fase = 2; t0 = performance.now();
+    clearTimeout(reloj); reloj = setTimeout(() => { fase = 0; dibujar(0); }, DESCUBRIR);
+  }
+  function medio() {
+    const f = alMedio; alMedio = null;
+    if (f) f();
+    destapar();
+  }
+  // cambiar: función que pone la pantalla nueva (a mitad). null = solo destapar.
+  function pasar(cambiar) {
+    preparar();
+    if (fase === 1) {                                    // ya se estaba tapando: encadenar los cambios
+      const antes = alMedio; alMedio = () => { if (antes) antes(); if (cambiar) cambiar(); };
+      return;
+    }
+    if (fase === 2 && cambiar) { cambiar(); destapar(); } // a medio destapar: cambiar y volver a destapar
+    else if (cambiar) { fase = 1; alMedio = cambiar; t0 = performance.now(); clearTimeout(reloj); reloj = setTimeout(medio, CUBRIR); }
+    else destapar();
+    if (!corriendo) { corriendo = true; requestAnimationFrame(cuadro); }
+  }
+  return { pasar, disponible: () => !quieto };
+})();
 
 function hudEstrellas(n) {
   return `<span class="hud-estrellas"><img class="pixelado" src="${spriteURL('estrella')}" alt=""><b id="contador">${n}</b>/19</span>`;
@@ -384,6 +468,10 @@ function pantallaMapa() {
   nivelToken = null;
   Sonido.musica('aventura');
   const comp = estado.completados;
+  // ¿Ha avanzado desde la última vez que vio el mapa? Entonces la niebla se retira con animación
+  const antes = Math.min(estado.mapaVisto ?? comp, comp);
+  estado.mapaVisto = comp; guardar();
+  window.MAPA_PROGRESO = { antes, ahora: comp };
   const nodos = NIVELES.map((n, i) => {
     const cont = C.niveles[n.id];
     const cls = i < comp ? 'hecho' : (i === comp ? 'actual' : 'bloqueado');
@@ -420,6 +508,18 @@ function pantallaMapa() {
   });
   const bf = $('.btn-final', s);
   if (bf) bf.onclick = () => { Sonido.sfx('tap'); secuenciaFinal(); };
+
+  if (antes < comp) {
+    // la niebla empieza a irse ~0,85 s después de cambiar de pantalla y tarda ~1,7 s
+    setTimeout(() => { if (s.isConnected) Sonido.sfx('magia'); }, 850);
+    setTimeout(() => {
+      if (!s.isConnected) return;
+      Efectos.en($('.nodo.actual .circulo', s) || bf, 30, Efectos.DORADO, 1.1);
+      Sonido.sfx(comp >= 5 ? 'victoria' : 'estrella');
+      const m = C.mapa || {};
+      burbuja(comp >= 5 ? (m.todoDespejado || '¡Todo el reino brilla! ✨') : (m.nieblaFuera || '¡La niebla se fue! ✨'), 2800);
+    }, 2500);
+  }
 }
 
 // ---------------------------------------------------------------------

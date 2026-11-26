@@ -305,6 +305,121 @@ const Escena = (() => {
     resplandor(c, x, base - 14, 6, ventana, 0.12);
   }
 
+  // ---------------------------------------------------------------
+  //  El mapa cambia con el progreso (window.MAPA_PROGRESO lo pone el mapa):
+  //   • zonas superadas: flores alrededor y brillitos dorados en el camino
+  //   • zonas bloqueadas: niebla que se disipa al completar cada nivel
+  //   • todo completado: el castillo brilla y hay fuegos artificiales
+  // ---------------------------------------------------------------
+  const easeOut = k => 1 - Math.pow(1 - k, 3);
+  function progresoReino(c, pts, cerca) {
+    const prog = window.MAPA_PROGRESO || { antes: 0, ahora: 0 };
+    const { antes, ahora } = prog;
+    const animar = antes < ahora && !prog.animado;
+    prog.animado = true;                       // si se repinta (girar el móvil...), ya sin animación
+    const tIni = t;
+
+    // flores alrededor de los lugares superados
+    const FLORES = ['#ff77a8', '#ffcd75', '#f4f4f4', '#73eff7', '#ef7d57'];
+    for (let i = 0; i < Math.min(ahora, 5); i++) {
+      const [nx, ny] = pts[i];
+      for (let k = 0; k < 34; k++) {
+        const a = rnd() * Math.PI * 2, r = 12 + rnd() * 12;
+        const x = Math.round(nx + Math.cos(a) * r), y = Math.round(ny + Math.sin(a) * r * 0.8);
+        if (cerca(x, y, 4) && Math.hypot(x - nx, y - ny) > 10) continue;
+        const col = FLORES[Math.floor(rnd() * FLORES.length)];
+        if (rnd() < 0.45) {                    // florcita en cruz con centro amarillo
+          px(c, x - 1, y, col); px(c, x + 1, y, col); px(c, x, y - 1, col); px(c, x, y + 1, col);
+          px(c, x, y, col === '#ffcd75' ? '#ef7d57' : '#ffcd75'); px(c, x, y + 2, '#1e7a3c');
+        } else px(c, x, y, col);
+      }
+    }
+    // brillitos: alrededor de los lugares superados y polvo de estrellas en el camino recorrido
+    const brillos = [];
+    for (let i = 0; i < Math.min(ahora, 5); i++) {
+      const [nx, ny] = pts[i];
+      for (let k = 0; k < 6; k++) brillos.push({ x: nx + (rnd() - 0.5) * 34, y: ny + (rnd() - 0.5) * 28, f: rnd() * 6, v: 1.5 + rnd() * 2 });
+      const q = pts[i + 1];
+      if (q && i + 1 <= ahora) {
+        const n = Math.ceil(Math.hypot(q[0] - nx, q[1] - ny) / 5);
+        for (let k = 1; k < n; k++) {
+          const x = nx + (q[0] - nx) * k / n + (rnd() - 0.5) * 4, y = ny + (q[1] - ny) * k / n + (rnd() - 0.5) * 4;
+          px(c, x, y, '#ffcd75');
+          if (k % 2) brillos.push({ x, y, f: rnd() * 6, v: 1 + rnd() * 2 });
+        }
+      }
+    }
+    actores.push((g, tt) => {
+      for (const b of brillos) {
+        const a = Math.sin(tt * b.v + b.f);
+        if (a < 0.6) continue;
+        const x = Math.round(b.x), y = Math.round(b.y);
+        g.fillStyle = '#fff3b0'; g.fillRect(x, y, 1, 1);
+        if (a > 0.85) { g.globalAlpha = 0.7; g.fillStyle = '#ffcd75'; g.fillRect(x - 1, y, 3, 1); g.fillRect(x, y - 1, 1, 3); g.globalAlpha = 1; }
+      }
+    });
+
+    // niebla sobre lo que falta por desbloquear
+    const borde = n => n >= 5 ? -30 : pts[n][1] - 16;   // la niebla tapa lo que está por encima de esta línea
+    const ANCHO_BORDE = 26, M = 8;
+    const nw = w + M * 2, nh = h + ANCHO_BORDE + 40;
+    const niebla = document.createElement('canvas'); niebla.width = nw; niebla.height = nh;
+    const nc = niebla.getContext('2d'), img = nc.createImageData(nw, nh), d = img.data;
+    const OSC = [0x10, 0x14, 0x2b], VELO = [0x24, 0x30, 0x63];
+    for (let y = 0; y < nh; y++) for (let x = 0; x < nw; x++) {
+      const ondula = Math.sin(x * 0.13) * 4 + Math.sin(x * 0.047 + 1.3) * 6;
+      const fondo = nh - ANCHO_BORDE + ondula;           // por debajo de aquí, sin niebla
+      const dens = Math.max(0, Math.min(1, (fondo - y) / ANCHO_BORDE));
+      if (!dens) continue;
+      const i = (y * nw + x) * 4, umbral = BAYER[(y & 3) * 4 + (x & 3)];
+      const jirones = Math.sin(x * 0.09 + y * 0.05) + Math.sin(x * 0.031 - y * 0.08 + 2);
+      let col, a;
+      if (umbral < dens * 9) { col = jirones > 0.9 && umbral < 5 ? VELO : OSC; a = 255; }
+      else { col = OSC; a = Math.round(dens * 120); }
+      d[i] = col[0]; d[i + 1] = col[1]; d[i + 2] = col[2]; d[i + 3] = a;
+    }
+    nc.putImageData(img, 0, 0);
+    const y0 = borde(animar ? antes : ahora), y1 = borde(ahora);
+    if (y0 > -30 || y1 > -30) {
+      actores.push((g, tt) => {
+        let k = animar ? Math.max(0, Math.min(1, (tt - tIni - 0.55) / 1.7)) : 1;
+        const yb = y0 + (y1 - y0) * easeOut(k);
+        if (yb <= -30) return;
+        g.drawImage(niebla, Math.round(-M + Math.sin(tt * 0.35) * 3), Math.round(yb - nh + 4));
+      });
+    }
+
+    // ¡todo completado!: el castillo brilla y hay fuegos artificiales
+    if (ahora >= 5) {
+      const [cx, cy] = pts[4].map(Math.round);
+      resplandor(c, cx, cy, 30, '#ffcd75', 0.22);
+      resplandor(c, cx, cy, 18, '#fff3b0', 0.18);
+      chispasSuben(14, ['#ffcd75', '#fff3b0', '#ff77a8'], 5);
+      const cohetes = [];
+      let espera = animar ? 2.4 : 0.8;
+      actores.push((g, tt, dt) => {
+        espera -= dt;
+        if (espera <= 0) {
+          espera = 1.6 + Math.random() * 1.8;
+          const x = w * (0.15 + Math.random() * 0.7), y = h * (0.06 + Math.random() * 0.3);
+          const cols = [['#ff77a8', '#fff3b0'], ['#73eff7', '#f4f4f4'], ['#ffcd75', '#ef7d57'], ['#a7f070', '#f4f4f4']][Math.floor(Math.random() * 4)];
+          for (let k = 0; k < 22; k++) {
+            const a = k / 22 * Math.PI * 2, v = 14 + Math.random() * 10;
+            cohetes.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, vida: 1 + Math.random() * 0.4, col: cols[k % 2] });
+          }
+        }
+        for (const p of cohetes) {
+          p.vy += 18 * dt; p.vx *= 1 - dt * 1.2; p.vy *= 1 - dt * 1.2;
+          p.x += p.vx * dt; p.y += p.vy * dt; p.vida -= dt;
+          g.globalAlpha = Math.max(0, Math.min(1, p.vida * 1.5)); g.fillStyle = p.col;
+          g.fillRect(Math.round(p.x), Math.round(p.y), 1, 1);
+        }
+        g.globalAlpha = 1;
+        for (let k = cohetes.length - 1; k >= 0; k--) if (cohetes[k].vida <= 0) cohetes.splice(k, 1);
+      });
+    }
+  }
+
   const ESCENAS = {
     noche(c) {
       franjas(c, NOCHE, 0, h * 0.8);
@@ -416,6 +531,7 @@ const Escena = (() => {
       }
       vineta(c, '#257179', 0.78);
       nubes(4, 0, h, 0.55, true);
+      if (pts.length === 5) progresoReino(c, pts, cerca);
     },
     bosque(c) {
       franjas(c, ['#081418', '#0b1d20', '#0e2a2c', '#12383a', '#174645', '#1d5450'], 0, h * 0.72);
